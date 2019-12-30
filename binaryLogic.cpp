@@ -159,6 +159,20 @@ void printRes()
     cout << endl;
 
     cout << endl;
+    int format[8] = {3, 7, 11, 15, 19, 23, 27, 31};
+    int f = 0;
+    while (f < 8) {
+        int space = 0;
+        if (format[f] != 7 && format[f] != 11) {
+            while (space++ < 3) { cout << " ";}
+            cout << format[f++];
+        } else {
+            cout << "    7    11";
+            f = 3;
+        }
+    }
+    cout << endl;
+    
     int bin[32];
     for (int k = 0; k < 32; k++) bin[k] = 2;
     i = 0;
@@ -174,8 +188,7 @@ void printRes()
         else cout << '1';
         cnt++;
 
-        if (cnt == 16) cout << "\n\n";
-        else if (cnt % 4 == 0) cout << " ";
+        if (cnt % 4 == 0) cout << " ";
     }
 
     cout << endl;
@@ -183,14 +196,13 @@ void printRes()
 
 int main()
 {
-	cin.getline(str, 256);
-
-	toLower();
-//	cout << str << endl;
-    initStr();
-//  cout << str << endl;
-    solve();
-    printRes();
-
-	return 0;
+    while (cin.getline(str, 256)) {
+        toLower();
+        initStr();
+        solve();
+        printRes();
+        cout << "-------------------------------\n\n";
+    }
+    
+    return 0;
 }
