@@ -66,6 +66,7 @@ void initStr()
         }
     }
     temp[j] = '\0';
+    cnt = 0;
     memcpy(str, temp, 256);
 }
 
@@ -82,12 +83,12 @@ void solve()
         } else if (ch == '~' || ch == '('){
             op.push(ch);
         } else if (ch == '|' || ch == '&') {
-            if (op.top() == '~') {
+            if (!op.empty() && op.top() == '~') {
                 op.pop();
                 op.push(ch);
                 if (val.empty()) error();
                 unsigned int temp = ~(val.top());
-                //cout << "~  " << temp;
+            //    cout << "~  " << temp;
                 val.pop();
                 val.push(temp);
             } else
@@ -195,10 +196,12 @@ void printRes()
 }
 
 int main()
-{
+{  
     while (cin.getline(str, 256)) {
         toLower();
+ //       cout << str << endl;
         initStr();
+ //       cout << str << endl;
         solve();
         printRes();
         cout << "-------------------------------------------\n\n";
