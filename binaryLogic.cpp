@@ -2,18 +2,44 @@
 #include <cstdio>
 #include <cmath>
 #include <cstring>
+#include <cstdlib>
 #include <stack>
 using namespace std;
 
 char str[256];
-unsigned int num[100];
+unsigned int num[10];
 int cnt = 0;
 unsigned int result = 0;
 char Hex[16]={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 
+template<class T>
+class STACK {
+    private:
+    stack<T> s;
+
+    public:
+        void pop() {s.pop();}
+
+        T top() {return s.top();}
+
+        void push(T a) {s.push(a);}
+
+        bool empty() {return s.empty();}
+
+        int size() {return s.size();}
+
+        void clear() {
+            while (!s.empty()) s.pop();
+        }
+};
+
+STACK<char> op;
+STACK<char> val;
+
 void error()
 {
     cout << "Input is wrong!" << endl;
+    exit(1);
 }
 
 bool numOrNot(char ch)
@@ -37,7 +63,20 @@ void initStr()
     for (; str[i]; i++) {
         char ch = str[i];
         if (ch == ' ') continue;
-        if (ch == '~' || ch == '|' || ch =='&' || ch == '(' || ch == ')') temp[j++] = ch;
+        if (ch == '~' || ch == '|' || ch =='&' || ch == '^' || ch == '(' || ch == ')') temp[j++] = ch;
+        else if (ch == '<' || ch == '>') {
+            temp[j++] = ch;
+            int p = i + 2;
+            while (str[p] <'0' || str[p] > '9') p++;
+            unsigned int move = 0;
+            while (str[p] <= '9' && str[p] >= '0') {
+                move = move * 10 + (str[p] - '0');
+                p++;
+            }
+            num[cnt++] = move;
+            temp[j++] = (cnt - 1) + '0';
+            i = p - 1;
+        }
         else if (ch == '0') {
             if (str[i+1] && str[i+1] == 'x') {
                 int k = i + 2;
@@ -45,7 +84,6 @@ void initStr()
                     if (!numOrNot(str[k])) break;
                 }
                 int len = k - i - 2;
-        //        cout << i + 2 << " " << len << endl;
                 int step = len;
                 k = i + 2;
                 unsigned int number = 0;
@@ -59,86 +97,143 @@ void initStr()
                     len--;
                     k++;
                 }
-            //    cout << number << endl;
                 num[cnt++] = number;
                 temp[j++] = (cnt - 1) + '0';
             }
         }
     }
     temp[j] = '\0';
+    // for (int p = 0; p < cnt; p++) cout << "num: " << num[p] << endl;
+    cnt = 0;
     memcpy(str, temp, 256);
+}
+
+void opStack(char ope, int pri1)
+{
+    while (!op.empty()) {
+        char ch = op.top();
+        if (ch == '(') break;
+        int pri2 = 0;
+        if (ch == '~') pri2 = 1;
+        else if (ch == '<' || ch == '>') pri2 = 2;
+        else if (ch == '&') pri2 = 3;
+        else if (ch == '^') pri2 = 4;
+        else pri2 = 5;
+
+        if (pri1 >= pri2) { op.pop(); val.push(ch);}
+        else break;
+    }
+    op.push(ope);
+}
+
+void valStack()
+{
+    while (!op.empty()) {
+        char c = op.top();
+        op.pop();
+        if (c == '(') break;
+        else val.push(c);
+    }
 }
 
 void solve()
 {
-    stack<char> op;
-    stack<unsigned int> val;
-
     for (int i = 0; str[i]; i++) {
         char ch = str[i];
-        if (ch <= '9' && ch >= '0') {
-            val.push(num[ch - '0']);
-            //cout << "who  " << num[ch - '0'] << endl;
-        } else if (ch == '~' || ch == '('){
-            op.push(ch);
-        } else if (ch == '|' || ch == '&') {
-            if (op.top() == '~') {
-                op.pop();
+        switch (ch) {
+            case '<' :
+            case '>' :
+                opStack(ch, 2);
+                break;
+            case '~' :
+                opStack(ch, 1);
+                break;
+            case '&' :
+                opStack(ch, 3);
+                break;
+            case '^' :
+                opStack(ch, 4);
+                break;
+            case '|' :
+                opStack(ch, 5);
+                break;
+            case '(' :
                 op.push(ch);
-                if (val.empty()) error();
-                unsigned int temp = ~(val.top());
-                //cout << "~  " << temp;
-                val.pop();
-                val.push(temp);
-            } else
-                op.push(ch);
-        } else if (ch == ')') {
-            while (!op.empty() && op.top() != '(') {
-                unsigned int a = val.top();
-                val.pop();
-                char opera = op.top();
-                op.pop();
-                if (opera == '~') {
-                    a = ~a;
-                    val.push(a);
-                } else {
-                    unsigned int b = val.top();
-                    val.pop();
-                    if (opera == '|') {
-                        //cout <<"|  " << (a|b) << endl;
-                        val.push(a | b);
-                    } else {
-                        //cout << "&  " << (a&b) << endl;
-                        val.push(a & b);
-                    }
-                }
-            }
-            if (op.top() == '(') op.pop();
+                break;
+            case ')' :
+                valStack();
+                break;
+            default :
+                val.push(ch);
+                break;
         }
     }
-
     while (!op.empty()) {
-        char lastOp = op.top();
+        val.push(op.top());
         op.pop();
-        unsigned int val1 = val.top();
+    }
+
+    while (!val.empty()) {
+        op.push(val.top());
         val.pop();
-        if (lastOp == '~') {
-            val.push(~val1);
-            //cout <<"~  " << ~val1 << endl;
-        } else {
-            unsigned int val2 = val.top();
-            val.pop();
-            if (lastOp == '|') {
-                //cout <<"|  " << (val1|val2) << endl;
-                val.push(val1 | val2);
-            } else {
-                //cout <<"&  " << (val1&val2) << endl;
-                val.push(val1 & val2);
+    }
+
+    STACK<unsigned int> res;
+    while (!op.empty()) {
+        char ch = op.top();
+        op.pop();
+        if (ch <= '9' && ch >= '0') res.push(num[ch - '0']);
+        else {
+            unsigned int a = 0;
+            unsigned int b = 0;
+            switch (ch) {
+                case '~' :
+                    if (res.empty()) error();
+                    a = ~(res.top());
+                    res.pop();
+                    res.push(a);
+                    break;
+                case '<' :
+                    if (res.size() < 2) error();
+                    a = res.top(); res.pop();
+                    b = res.top(); res.pop();
+                    b = b << a;
+                    res.push(b);
+                    break;
+                case '>' :
+                    if (res.size() < 2) error();
+                    a = res.top(); res.pop();
+                    b = res.top(); res.pop();
+                    b = b >> a;
+                    res.push(b);
+                    break;
+                case '&' :
+                    if (res.size() < 2) error();
+                    a = res.top(); res.pop();
+                    b = res.top(); res.pop();
+                    b = b & a;
+                    res.push(b);
+                    break;
+                case '^' :
+                    if (res.size() < 2) error();
+                    a = res.top(); res.pop();
+                    b = res.top(); res.pop();
+                    b = b ^ a;
+                    res.push(b);
+                    break;
+                case '|' :
+                    if (res.size() < 2) error();
+                    a = res.top(); res.pop();
+                    b = res.top(); res.pop();
+                    b = b | a;
+                    res.push(b);
+                    break;
+                default:
+                    break;
             }
         }
     }
-
-    result = val.top();
+    if (res.size() == 1) result = res.top();
 }
 
 void printRes()
@@ -172,7 +267,7 @@ void printRes()
         }
     }
     cout << endl;
-    
+
     int bin[32];
     for (int k = 0; k < 32; k++) bin[k] = 2;
     i = 0;
@@ -198,11 +293,15 @@ int main()
 {
     while (cin.getline(str, 256)) {
         toLower();
+        // cout << str << endl;
         initStr();
+        // cout << str << endl;
         solve();
         printRes();
+        op.clear();
+        val.clear();
         cout << "-------------------------------------------\n\n";
     }
-    
+
     return 0;
 }
