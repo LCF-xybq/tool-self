@@ -254,16 +254,18 @@ void printRes()
     cout << endl;
 
     cout << endl;
-    int format[8] = {3, 7, 11, 15, 19, 23, 27, 31};
-    int f = 0;
+    int format[8] = {31, 27, 23, 19, 15, 11, 7, 3};
+    int f = 0, space = 0;
     while (f < 8) {
-        int space = 0;
-        if (format[f] != 7 && format[f] != 11) {
-            while (space++ < 3) { cout << " ";}
-            cout << format[f++];
+        if (format[f] > 7) {
+            if (f != 0 && (space++) < 3) cout << " ";
+            else {
+                cout << format[f];
+                f++; space = 0;
+            }
         } else {
-            cout << "    7    11";
-            f = 3;
+            cout << "    7    3";
+            break;
         }
     }
     cout << endl;
@@ -277,6 +279,7 @@ void printRes()
         a = a / 2;
     }
 
+    cout << " ";
     int cnt = 0;
     for (i = 31; i >= 0; i--) {
         if (bin[i] == 0 || bin[i] == 2) cout << '0';
