@@ -9,3 +9,8 @@ support new operators, now it supports '~', '<<', '>>', '&', '^', '|'
 so, I have completed this tool preliminary
 @author: JoestarLiu
 @version: v2.0
+
+
+update 2020/5/17
+add new tool (python script)
+change files' name
